@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101827">
+<title>BigMoney NFL Game Guide</title>
+<style>
+:root{--bg:#0b1220;--panel:#121e30;--panel2:#18273c;--text:#edf3fb;--muted:#9fb0c5;--gold:#e4b34c;--line:#293a51;--green:#45c486;--red:#ff7777}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#101b2d,#09111e 430px);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{padding:25px max(18px,calc((100vw - 1180px)/2));border-bottom:1px solid var(--line);background:#0d1727eF;position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}
+.brand{display:flex;align-items:center;gap:12px}.ball{font-size:32px}.brand h1{font-size:clamp(20px,4vw,28px);margin:0}.brand p{margin:2px 0 0;color:var(--muted);font-size:13px}
+main{max-width:1180px;margin:24px auto;padding:0 16px 60px}.hero{padding:25px;border:1px solid #34445b;border-radius:18px;background:radial-gradient(circle at 90% 10%,#29405c 0,transparent 38%),linear-gradient(130deg,#182a41,#101b2c);margin-bottom:20px}
+.hero h2{font-size:clamp(23px,4vw,34px);margin:0 0 5px}.hero p{color:var(--muted);margin:0}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:18px 0}
+select,button{background:var(--panel2);color:var(--text);border:1px solid var(--line);padding:10px 13px;border-radius:10px;font:inherit}
+button{cursor:pointer}button.primary{background:var(--gold);color:#1a2431;border-color:var(--gold);font-weight:700}
+.tabs{display:flex;gap:8px;overflow:auto;margin:20px 0}.tab{white-space:nowrap}.tab.active{background:var(--gold);color:#172235;border-color:var(--gold);font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.card{background:linear-gradient(160deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:15px;padding:16px;min-width:0}
+.card h3{margin:0 0 12px;font-size:17px}.game-top{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:12px}.teams{display:grid;grid-template-columns:1fr auto;gap:8px;margin:14px 0}.team{display:flex;align-items:center;gap:9px;font-weight:700}.team img{width:29px;height:29px;object-fit:contain}.score{font-size:22px;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}.game-bottom{display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:10px;color:var(--muted);font-size:12px}.pill{display:inline-block;padding:3px 8px;border-radius:20px;background:#243850;color:#cbd9e9;font-size:11px}.live{background:#4b2028;color:#ffb2b2}.section{display:none}.section.active{display:block}.muted{color:var(--muted)}.status{padding:12px;border:1px dashed var(--line);border-radius:12px;color:var(--muted)}.injury-row{display:grid;grid-template-columns:1fr auto;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}.injury-row:last-child{border:0}.tag{font-size:12px;color:#ffcf83}.empty{text-align:center;padding:28px;color:var(--muted)}footer{color:var(--muted);font-size:12px;margin-top:28px;border-top:1px solid var(--line);padding-top:16px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}header{position:static}.hero{padding:19px}.toolbar select{flex:1;min-width:130px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="ball">🏈</div><div><h1>BigMoney NFL Game Guide</h1><p>All 32 teams · Scores · Predictions · TV · Injury updates</p></div></div></header>
+<main>
+<section class="hero"><h2>Your NFL Sunday starts here.</h2><p>League-wide game center for the 2026 season. Scores and reports refresh automatically.</p></section>
+<div class="toolbar">
+<label for="week" class="muted">Season week</label>
+<select id="week" aria-label="NFL week"></select>
+<button class="primary" id="refresh">↻ Refresh now</button>
+<span id="updated" class="muted">Loading data…</span>
+</div>
+<nav class="tabs">
+<button class="tab active" data-tab="scores">Scores & schedule</button>
+<button class="tab" data-tab="predictions">Predictions</button>
+<button class="tab" data-tab="tv">TV channels</button>
+<button class="tab" data-tab="injuries">Injury report</button>
+</nav>
+<section id="scores" class="section active"><div id="games" class="grid"><div class="status">Loading NFL games…</div></div></section>
+<section id="predictions" class="section"><div class="card"><h3>Game predictions</h3><p class="muted">A transparent, basic estimate using team records when ESPN supplies them. It is not betting advice and does not account for every factor.</p><div id="picks" class="grid"><div class="status">Loading predictions…</div></div></div></section>
+<section id="tv" class="section"><div class="card"><h3>Broadcast guide</h3><p class="muted">Networks are shown when the game data includes broadcast information. Streaming exclusives may require a subscription.</p><div id="broadcasts"><div class="status">Loading broadcast listings…</div></div></div></section>
+<section id="injuries" class="section"><div class="card"><h3>League injury report</h3><p class="muted">Status and player availability can change close to kickoff. Check the team’s official report before relying on this information.</p><div id="injury-list"><div class="status">Loading injury information…</div></div></div></section>
+<footer>Data provided by ESPN public-facing data endpoints. This is an independent fan project and is not affiliated with or endorsed by the NFL or ESPN. Data feeds may change, be delayed, or be unavailable. Predictions are estimates, not guarantees.</footer>
+</main>
+<script>
+const API='https://site.api.espn.com/apis/site/v2/sports/football/nfl';
+const $=id=>document.getElementById(id);
+let events=[], injuries=[];
+const currentYear=new Date().getFullYear();
+for(let w=1;w<=18;w++){const o=document.createElement('option');o.value=w;o.textContent='Week '+w;$('week').append(o)}
+$('week').value='10';
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+ document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));
+ document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===b.dataset.tab));
+}));
+$('week').addEventListener('change',loadAll);$('refresh').addEventListener('click',loadAll);
+async function getJSON(url){const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);return r.json()}
+function teamInfo(c){return c?.team||{}}
+function logo(t){return t.logo|| (t.id?`https://a.espncdn.com/i/teamlogos/nfl/500/${t.abbreviation?.toLowerCase()}.png`:'')}
+function record(t){return t.records?.[0]?.summary||t.record||''}
+function gameStatus(e){return e.status?.type?.shortDetail||e.status?.type?.description||'Scheduled'}
+function isLive(e){return e.status?.type?.state==='in'}
+function formatKick(e){try{return new Date(e.date).toLocaleString([], {weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}catch{return e.date||''}}
+function broadcasts(e){const c=e.competitions?.[0]||{};let b=c.broadcasts||e.broadcasts||[];return b.map(x=>x.names?.join(', ')||x.name||x.shortName).filter(Boolean).join(' · ')||'Not listed'}
+function matchup(e){const cs=e.competitions?.[0]?.competitors||[];const home=cs.find(x=>x.homeAway==='home')||cs[0]||{};const away=cs.find(x=>x.homeAway==='away')||cs[1]||{};return {home,away}}
+function gameCard(e){const {home,away}=matchup(e),ht=teamInfo(home),at=teamInfo(away),live=isLive(e),state=e.status?.type?.state;
+return `<article class="card"><div class="game-top"><span>${formatKick(e)}</span><span class="pill ${live?'live':''}">${live?'● LIVE':gameStatus(e)}</span></div>
+<div class="teams"><div><div class="team">${logo(at)?`<img src="${logo(at)}" alt="">`:''}<span>${at.displayName||at.name||'Away team'}</span></div><div class="team">${logo(ht)?`<img src="${logo(ht)}" alt="">`:''}<span>${ht.displayName||ht.name||'Home team'}</span></div></div>
+<div class="score">${away.score??'—'}<br>${home.score??'—'}</div></div>
+<div class="game-bottom"><span>${e.name||'NFL matchup'}</span><span>${broadcasts(e)}</span></div></article>`}
+function renderGames(){if(!events.length){$('games').innerHTML='<div class="empty">No games were returned for this week yet.</div>';return}
+$('games').innerHTML=events.map(gameCard).join('');
+$('broadcasts').innerHTML=events.map(e=>`<div class="injury-row"><div><strong>${e.name||'NFL game'}</strong><div class="muted">${formatKick(e)}</div></div><div>${broadcasts(e)}</div></div>`).join('')}
+function winPct(t){let s=record(t);let m=s.match(/(\d+)-(\d+)(?:-(\d+))?/);if(!m)return null;let w=+m[1],l=+m[2],tie=+(m[3]||0);return (w+.5*tie)/(w+l+tie||1)}
+function renderPicks(){if(!events.length){$('picks').innerHTML='<div class="empty">No matchups available.</div>';return}
+$('picks').innerHTML=events.map(e=>{let {home,away}=matchup(e),h=teamInfo(home),a=teamInfo(away),hp=winPct(h),ap=winPct(a);let msg='Not enough record data for a meaningful estimate';if(hp!==null&&ap!==null){let d=hp-ap;msg=d>.03?`${h.displayName} slight record-based edge`:d<-.03?`${a.displayName} slight record-based edge`:'Records are nearly even'}return `<div class="card"><h3>${e.name||'Matchup'}</h3><div>${record(a)||'Record unavailable'} · ${a.displayName||'Away'}<br>${record(h)||'Record unavailable'} · ${h.displayName||'Home'}</div><p class="tag">${msg}</p></div>`}).join('')}
+function renderInjuries(){if(!injuries.length){$('injury-list').innerHTML='<div class="empty">No injury data was returned. Try refreshing or check official team reports.</div>';return}
+$('injury-list').innerHTML=injuries.slice(0,100).map(x=>{let a=x.athlete||x.player||{},t=x.team||{};let status=x.status||x.type?.description||x.details?.type||'Status not supplied';return `<div class="injury-row"><div><strong>${a.displayName||a.fullName||x.name||'Player'}</strong><div class="muted">${t.displayName||t.name||x.teamName||'Team unavailable'} · ${a.position?.abbreviation||''}</div></div><div class="tag">${status}</div></div>`}).join('')}
+async function loadAll(){const week=+$('week').value;$('updated').textContent='Refreshing…';
+try{const data=await getJSON(`${API}/scoreboard?limit=100&season=${currentYear}&seasontype=2&week=${week}`);events=data.events||[];renderGames();renderPicks();$('updated').textContent='Updated '+new Date().toLocaleTimeString()}
+catch(err){$('games').innerHTML=`<div class="status">Could not load scores: ${err.message}. Check your connection and try again.</div>`;$('updated').textContent='Score feed unavailable'}
+try{const data=await getJSON(`${API}/injuries`);injuries=data.items||data.injuries||data.entries||[];renderInjuries()}
+catch(err){$('injury-list').innerHTML=`<div class="status">Injury feed unavailable: ${err.message}. Use official team injury reports.</div>`}
+}
+loadAll();setInterval(loadAll,60000);
+</script>
+</body>
+</html>
